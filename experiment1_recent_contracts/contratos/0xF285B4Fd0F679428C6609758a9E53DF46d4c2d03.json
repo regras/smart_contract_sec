@@ -1,0 +1,27 @@
+{{
+  "language": "Vyper",
+  "sources": {
+    "src/interfaces/AggregatorV3Interface.vyi": {
+      "content": "# @version 0.4.1\n\n@external\n@pure\ndef decimals() -> uint8:\n    \"\"\"\n    @notice Returns the number of decimals used by the price feed.\n    \"\"\"\n    ...",
+      "sha256sum": "62bc5cfc1c34b55227d0a3d5f4210715dcd8b2eb0677c2092c8ec8e4a8cc32f1"
+    },
+    "src/sanity.vy": {
+      "content": "# @version 0.4.1\n# WHAT VERIFYING A VYPER CONTRACT DOES, DEVS, PLS\n\nfrom interfaces import AggregatorV3Interface\n\nimplements: AggregatorV3Interface\n\n\nCL_DECIMALS_DIFF: constant(uint256) = 10**8\nCL_DECIMALS_DIFF1: constant(uint256) = 10**8\n\n@deploy\ndef __init__():\n    assert (\n        1 == 1\n    )  # assuming this will always be true\n\n\n@external\n@pure\ndef decimals() -> uint8:\n    \"\"\"\n    @notice Returns the number of decimals used by the price feed\n    \"\"\"\n    return 18\n\n@external\n@pure\ndef decimals1() -> uint8:\n    \"\"\"\n    @notice Returns the number of decimals used by the price feed\n    \"\"\"\n    return 18",
+      "sha256sum": "2ea37e0c7e4415933ffdcc0212be66fa6097cce2b8846775c3ac9c3d0527a2aa"
+    }
+  },
+  "settings": {
+    "outputSelection": {
+      "src/sanity.vy": [
+        "evm.bytecode",
+        "evm.deployedBytecode",
+        "abi"
+      ]
+    },
+    "search_paths": [
+      "."
+    ]
+  },
+  "compiler_version": "v0.4.1+commit.8a93dd27",
+  "integrity": "c2652650b43a497691f7ca847993ef11bfe1501331c7a291c37e0760b2e4570f"
+}}

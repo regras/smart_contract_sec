@@ -1,0 +1,40 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/MaseerConduit.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\nimport {MaseerImplementation} from \"./MaseerImplementation.sol\";\n\ninterface Gem {\n    function transfer(address dst, uint256 wad) external returns (bool);\n    function balanceOf(address account) external view returns (uint256);\n}\n\ncontract MaseerConduit is MaseerImplementation {\n\n    // Slot 0\n    bytes32 private _emptySlot;\n    // Slot 1\n    mapping (address => uint256) public can;\n    // Slot 2\n    mapping (address => uint256) public bud;\n    // Allocate Slots 3-49\n    uint256[48] private __gap;\n\n    error ZeroAddress();\n    error TransferFailed();\n\n    function hope(address usr) external auth { can[usr] = 1; }\n    function nope(address usr) external auth { can[usr] = 0; }\n    modifier operator() {\n        if (can[msg.sender] != 1) revert NotAuthorized(msg.sender);\n        _;\n    }\n    function kiss(address usr) external auth { bud[usr] = 1; }\n    function diss(address usr) external auth { bud[usr] = 0; }\n    modifier buds(address usr) {\n        if (bud[usr] != 1) revert NotAuthorized(usr);\n        _;\n    }\n\n    event Move(\n        address indexed token,\n        address indexed to,\n        uint256 indexed amount\n    );\n\n    constructor() {\n        _rely(msg.sender);\n    }\n\n    function move(address _token, address _to) external operator buds(_to) returns (uint256 _amt) {\n        if (_token == address(0)) revert ZeroAddress();\n        _amt = Gem(_token).balanceOf(address(this));\n        _move(_token, _to, _amt);\n    }\n\n    function move(address _token, address _to, uint256 _amt) external operator buds(_to) returns (uint256) {\n        if (_token == address(0)) revert ZeroAddress();\n        _move(_token, _to, _amt);\n        return _amt;\n    }\n\n    function _move(address _token, address _to, uint256 _amt) internal {\n        _safeTransfer(_token, _to, _amt);\n        emit Move(_token, _to, _amt);\n    }\n\n    function _safeTransfer(address _token, address _to, uint256 _amt) internal {\n        (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(Gem.transfer.selector, _to, _amt));\n        if (!success || (data.length > 0 && abi.decode(data, (bool)) == false)) revert TransferFailed();\n    }\n}\n"
+    },
+    "src/MaseerImplementation.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\nabstract contract MaseerImplementation {\n\n    bytes32 internal constant _WARD_SLOT = keccak256(\"maseer.wards\");\n\n    error NotAuthorized(address usr);\n    error UnrecognizedParam(bytes32 param);\n\n    struct StringData {\n        string val;\n    }\n\n    modifier auth() {\n        if (uint256(_getVal(keccak256(abi.encode(_WARD_SLOT, msg.sender)))) != 1) revert NotAuthorized(msg.sender);\n        _;\n    }\n\n    function rely(address usr) external auth {\n        _rely(usr);\n    }\n\n    function deny(address usr) external auth {\n        _deny(usr);\n    }\n\n    function wards(address usr) external view returns (uint256) {\n        return uint256(_getVal(keccak256(abi.encode(_WARD_SLOT, usr))));\n    }\n\n    function _rely(address usr) internal {\n        _setVal(keccak256(abi.encode(_WARD_SLOT, usr)), bytes32(uint256(1)));\n    }\n\n    function _deny(address usr) internal {\n        _setVal(keccak256(abi.encode(_WARD_SLOT, usr)), bytes32(uint256(0)));\n    }\n\n    function _setVal(bytes32 slot, bytes32 val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, uint256 val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, address val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, bool val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, string memory val) internal {\n        StringData storage data;\n        assembly {\n            data.slot := slot\n        }\n        data.val = val;\n    }\n\n    function _getVal(bytes32 slot) internal view returns (bytes32 val) {\n        assembly {\n            val := sload(slot)\n        }\n    }\n\n    function _uint256Slot(bytes32 slot) internal view returns (uint256) {\n        return uint256(_getVal(slot));\n    }\n\n    function _addressSlot(bytes32 slot) internal view returns (address) {\n        return address(uint160(uint256(_getVal(slot))));\n    }\n\n    function _boolSlot(bytes32 slot) internal view returns (bool) {\n        return _getVal(slot) == bytes32(uint256(1)) ? true : false;\n    }\n\n    function _stringSlot(bytes32 slot) internal view returns (string memory) {\n        StringData storage data;\n        assembly {\n            data.slot := slot\n        }\n        return data.val;\n    }\n\n    function _b32toString(bytes32 _bytes32) internal pure returns (string memory) {\n        uint256 length = 0;\n        while (length < 32 && _bytes32[length] != 0) {\n            length++;\n        }\n\n        bytes memory bytesArray = new bytes(length);\n        for (uint256 i = 0; i < length; i++) {\n            bytesArray[i] = _bytes32[i];\n        }\n\n        return string(bytesArray);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 21000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}

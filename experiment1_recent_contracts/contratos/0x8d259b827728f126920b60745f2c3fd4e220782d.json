@@ -1,0 +1,40 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/MaseerPrice.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\nimport {MaseerImplementation} from \"./MaseerImplementation.sol\";\n\ncontract MaseerPrice is MaseerImplementation{\n\n    bytes32 internal constant _NAME_SLOT     = keccak256(\"maseer.price.name\");\n    bytes32 internal constant _PRICE_SLOT    = keccak256(\"maseer.price.price\");\n    bytes32 internal constant _DECIMALS_SLOT = keccak256(\"maseer.price.decimals\");\n\n    // Slot 0\n    bytes32 private _emptySlot;\n    // Slot 1\n    mapping (address => uint256) public bud;\n    // Allocate slots 2-49\n    uint256[48] private __gap;\n\n    event File(bytes32 indexed what, bytes32 data);\n    event Poke(uint256 indexed price, uint256 indexed timestamp);\n\n    function kiss(address usr) external auth { bud[usr] = 1; }\n    function diss(address usr) external auth { bud[usr] = 0; }\n    modifier buds() {\n        if (bud[msg.sender] != 1) revert NotAuthorized(msg.sender);\n        _;\n    }\n\n    constructor() {\n        _rely(msg.sender);\n    }\n\n    function read() external view returns (uint256) {\n        return _uint256Slot(_PRICE_SLOT);\n    }\n\n    function poke(uint256 read_) public buds {\n        _poke(read_);\n    }\n\n    function pause() external auth {\n        _poke(0);\n    }\n\n    function name() external view returns (string memory) {\n        return _stringSlot(_NAME_SLOT);\n    }\n\n    function decimals() external view returns (uint8 decimals_) {\n        return uint8(_uint256Slot(_DECIMALS_SLOT));\n    }\n\n    function paused() external view returns (bool) {\n        return (_uint256Slot(_PRICE_SLOT) == 0) ? true : false;\n    }\n\n    function file(bytes32 what, bytes32 data) external auth {\n        if      (what == \"price\")    _poke(uint256(data));\n        else if (what == \"name\")     _setVal(_NAME_SLOT, _b32toString(data));\n        else if (what == \"decimals\" && uint256(data) <= 18) _setVal(_DECIMALS_SLOT, data);\n        else    revert UnrecognizedParam(data);\n        emit    File(what, data);\n    }\n\n    function _poke(uint256 read_) internal {\n        _setVal(_PRICE_SLOT, bytes32(read_));\n        emit Poke(read_, block.timestamp);\n    }\n\n}\n"
+    },
+    "src/MaseerImplementation.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\nabstract contract MaseerImplementation {\n\n    bytes32 internal constant _WARD_SLOT = keccak256(\"maseer.wards\");\n\n    error NotAuthorized(address usr);\n    error UnrecognizedParam(bytes32 param);\n\n    struct StringData {\n        string val;\n    }\n\n    modifier auth() {\n        if (uint256(_getVal(keccak256(abi.encode(_WARD_SLOT, msg.sender)))) != 1) revert NotAuthorized(msg.sender);\n        _;\n    }\n\n    function rely(address usr) external auth {\n        _rely(usr);\n    }\n\n    function deny(address usr) external auth {\n        _deny(usr);\n    }\n\n    function wards(address usr) external view returns (uint256) {\n        return uint256(_getVal(keccak256(abi.encode(_WARD_SLOT, usr))));\n    }\n\n    function _rely(address usr) internal {\n        _setVal(keccak256(abi.encode(_WARD_SLOT, usr)), bytes32(uint256(1)));\n    }\n\n    function _deny(address usr) internal {\n        _setVal(keccak256(abi.encode(_WARD_SLOT, usr)), bytes32(uint256(0)));\n    }\n\n    function _setVal(bytes32 slot, bytes32 val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, uint256 val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, address val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, bool val) internal {\n        assembly {\n            sstore(slot, val)\n        }\n    }\n\n    function _setVal(bytes32 slot, string memory val) internal {\n        StringData storage data;\n        assembly {\n            data.slot := slot\n        }\n        data.val = val;\n    }\n\n    function _getVal(bytes32 slot) internal view returns (bytes32 val) {\n        assembly {\n            val := sload(slot)\n        }\n    }\n\n    function _uint256Slot(bytes32 slot) internal view returns (uint256) {\n        return uint256(_getVal(slot));\n    }\n\n    function _addressSlot(bytes32 slot) internal view returns (address) {\n        return address(uint160(uint256(_getVal(slot))));\n    }\n\n    function _boolSlot(bytes32 slot) internal view returns (bool) {\n        return _getVal(slot) == bytes32(uint256(1)) ? true : false;\n    }\n\n    function _stringSlot(bytes32 slot) internal view returns (string memory) {\n        StringData storage data;\n        assembly {\n            data.slot := slot\n        }\n        return data.val;\n    }\n\n    function _b32toString(bytes32 _bytes32) internal pure returns (string memory) {\n        uint256 length = 0;\n        while (length < 32 && _bytes32[length] != 0) {\n            length++;\n        }\n\n        bytes memory bytesArray = new bytes(length);\n        for (uint256 i = 0; i < length; i++) {\n            bytesArray[i] = _bytes32[i];\n        }\n\n        return string(bytesArray);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 21000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}

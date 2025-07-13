@@ -1,0 +1,37 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/MaseerPrecommit.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\ninterface Gem {\n    function transfer(address usr, uint256 wad) external returns (bool);\n    function transferFrom(address src, address dst, uint256 wad) external returns (bool);\n    function decimals() external view returns (uint8);\n    function approve(address usr, uint256 wad) external;\n    function balanceOf(address account) external view returns (uint256);\n    function allowance(address src, address dst) external view returns (uint256);\n}\n\ninterface One {\n    function gem() external view returns (address);\n    function flo() external view returns (address);\n    function mint(uint256 wad) external returns (uint256);\n    function mintcost() external view returns (uint256);\n    function canPass(address usr) external view returns (bool);\n}\n\ncontract MaseerPrecommit {\n\n    address public   immutable gem;\n    address public   immutable one;\n    uint256 internal immutable MIN;\n\n    uint256                   public deals;\n    mapping (uint256 => Deal) public deal;\n\n    struct Deal {\n        address usr;\n        uint256 amt;\n    }\n\n    error TransferFailed();\n    error InsufficientAllowance();\n    error InsufficientAmount();\n    error NotAuthorized(address usr);\n\n    modifier pass() {\n        if (!One(one).canPass(msg.sender)) revert NotAuthorized(msg.sender);\n        _;\n    }\n\n    constructor(address _one) {\n        gem = One(_one).gem();\n        MIN = 1000 * 10**uint256(Gem(gem).decimals());\n        one = _one;\n        Gem(gem).approve(_one, type(uint256).max);\n    }\n\n    function pact(uint256 _amt) external pass {\n        if (_amt < MIN) revert InsufficientAmount();\n        if (Gem(gem).allowance(msg.sender, address(this)) < _amt) revert InsufficientAllowance();\n\n        deal[deals++] = Deal({\n            usr: msg.sender,\n            amt: _amt\n        });\n    }\n\n    function exec(uint256 _idx) external pass {\n        Deal memory c = deal[_idx];\n        if (c.amt == 0) revert InsufficientAmount();\n        deal[_idx].amt = 0;\n\n        _safeTransferFrom(gem, c.usr, address(this), c.amt);\n        uint256 out = One(one).mint(c.amt);\n        _safeTransfer(one, c.usr, out);\n    }\n\n    function exit() external pass {\n        _safeTransfer(gem, One(one).flo(), Gem(gem).balanceOf(address(this)));\n    }\n\n    function amt(uint256 _idx) external view returns (uint256) {\n        return deal[_idx].amt;\n    }\n\n    function usr(uint256 _idx) external view returns (address) {\n        return deal[_idx].usr;\n    }\n\n    function min() external view returns (uint256) {\n        return MIN;\n    }\n\n    function _safeTransfer(address _token, address _to, uint256 _amt) internal {\n        (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(Gem.transfer.selector, _to, _amt));\n        if (!success || (data.length > 0 && abi.decode(data, (bool)) == false)) revert TransferFailed();\n    }\n\n    function _safeTransferFrom(address _token, address _from, address _to, uint256 _amt) internal {\n        (bool success, bytes memory data) = _token.call(abi.encodeWithSelector(Gem.transferFrom.selector, _from, _to, _amt));\n        if (!success || (data.length > 0 && abi.decode(data, (bool)) == false)) revert TransferFailed();\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 21000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}

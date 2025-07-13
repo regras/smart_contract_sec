@@ -1,0 +1,28 @@
+fails,count
+DOCKER_RECEIVED_SIGNAL_6,215
+exception (AttributeError: 'NoneType' object has no attribute 'expressionList'),62
+ bytes or bytearray,55
+"""exception (TypeError: the JSON object must be str",55
+" not list)""",55
+exception (AttributeError: 'NoneType' object has no attribute 'getText'),50
+exception (TypeError: object of type 'NoneType' has no len()),46
+DOCKER_TIMEOUT,45
+exception (AttributeError: 'NoneType' object has no attribute 'as_long'),8
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 5872: ordinal not in range(128)),5
+DOCKER_SEGV,4
+exception (IndexError: pop from empty list),2
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 83: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xf0 in position 4800: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xf0 in position 39: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xf0 in position 18: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xec in position 128: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe4 in position 4662: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 8: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe0 in position 470: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 4683: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 25933: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 18450: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 144: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 15180: ordinal not in range(128)),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 49: ordinal not in range(128)),1
+exception (ValueError: too many values to unpack (expected 4)),1

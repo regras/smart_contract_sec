@@ -1,0 +1,37 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/MaseerProxy.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\n// Copyright (c) 2025 Maseer LTD\n//\n// This file is subject to the Business Source License 1.1.\n// You may not use this file except in compliance with the License.\n//\n// You may obtain a copy of the License at:\n// https://github.com/Maseer-LTD/maseer-one/blob/master/LICENSE\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\npragma solidity ^0.8.28;\n\ncontract MaseerProxy {\n\n    bytes32 private constant _IMPL_WARD = keccak256(\"maseer.wards\");\n    bytes32 private constant _IMPL_SLOT = keccak256(\"maseer.proxy.implementation\");\n    bytes32 private constant _WARD_SLOT = keccak256(\"maseer.proxy.wards\");\n\n    function wardsProxy(address usr) external view returns (uint256) {\n        return _getAuth(usr);\n    }\n    function relyProxy(address usr) external proxyAuth { _setAuth(usr, 1); }\n    function denyProxy(address usr) external proxyAuth { _setAuth(usr, 0); }\n\n    error NotAuthorized();\n    error NoImplementation();\n\n    modifier proxyAuth() {\n        if (_getAuth(msg.sender) != 1) revert NotAuthorized();\n        _;\n    }\n\n    constructor(address _impl) {\n        _setAuth(msg.sender, 1);\n        _rely(msg.sender);\n        _setImpl(_impl);\n    }\n\n    function file(address _impl) external proxyAuth {\n        _setImpl(_impl);\n    }\n\n    function impl() external view returns (address) {\n        return _getImpl();\n    }\n\n    fallback() external {\n        address _impl = _getImpl();\n\n        assembly {\n            let ptr := mload(0x40)\n            calldatacopy(ptr, 0, calldatasize())\n            let result := delegatecall(gas(), _impl, ptr, calldatasize(), 0, 0)\n            returndatacopy(ptr, 0, returndatasize())\n\n            switch result\n            case 0 { revert(ptr, returndatasize()) }\n            default { return(ptr, returndatasize()) }\n        }\n    }\n\n    function _setImpl(address _impl) internal {\n        if (_impl == address(0)) revert NoImplementation();\n        bytes32 _slot = _IMPL_SLOT;\n        assembly {\n            sstore(_slot, _impl)\n        }\n    }\n\n    function _getImpl() internal view returns (address) {\n        bytes32 slot = _IMPL_SLOT;\n        address _impl;\n        assembly {\n            _impl := sload(slot)\n        }\n        return _impl;\n    }\n\n    function _setAuth(address usr, uint256 val) internal {\n        bytes32 _slot = keccak256(abi.encode(_WARD_SLOT, usr));\n        assembly {\n            sstore(_slot, val)\n        }\n    }\n\n    function _getAuth(address usr) internal view returns (uint256) {\n        bytes32 _slot = keccak256(abi.encode(_WARD_SLOT, usr));\n        uint256 _val;\n        assembly {\n            _val := sload(_slot)\n        }\n        return _val;\n    }\n\n    function _rely(address usr) internal {\n        bytes32 slot = keccak256(abi.encode(_IMPL_WARD, usr));\n        assembly {\n            sstore(slot, 1)\n        }\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 21000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}

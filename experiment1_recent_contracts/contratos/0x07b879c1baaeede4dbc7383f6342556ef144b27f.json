@@ -1,0 +1,58 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/lib/SortedLinkedList.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\npragma solidity 0.8.28;\n\nlibrary SortedLinkedList {\n    /**\n     * @dev Pointers to the prev and next nodes in the list.\n     */\n    struct Node {\n        uint256 prev;\n        uint256 next;\n    }\n\n    struct List {\n        uint256 begin; // The first id in the list.\n        uint256 end; // The last id in the list.\n        uint256 size; // The total amount of ids in the list.\n        // Mapping of nodes ids to their prev and next nodes.\n        mapping(uint256 nodeId => Node node) nodes;\n    }\n\n    error SortedLinked_ListIDNotInList();\n    error SortedLinked_ListIDAlreadyInList();\n    error SortedLinked_ListInvalidRange();\n    error SortedLinked_ListInvalidId();\n\n    /**\n     * @notice Insert a node into the list while maintaining an ascending order for _l.nodes.\n     * @param _l The sorted linked list to instert the node in\n     * @param _id The ID of the node to insert.\n     */\n    function insert(List storage _l, uint256 _id) public {\n        if (_id == 0) {\n            revert SortedLinked_ListInvalidId();\n        }\n        uint256 begin = _l.begin;\n        uint256 end = _l.end;\n        uint256 size = _l.size;\n        if (size == 0) {\n            _l.begin = _id;\n            _l.end = _id;\n        } else if (_id > end) {\n            _l.nodes[end].next = _id;\n            _l.nodes[_id].prev = end;\n            _l.end = _id;\n        } else if (_id < begin) {\n            _l.nodes[begin].prev = _id;\n            _l.nodes[_id].next = begin;\n            _l.begin = _id;\n        } else {\n            uint256 current = begin;\n            for (uint256 i; i < size; ++i) {\n                if (_id < current) {\n                    uint256 prev = _l.nodes[current].prev;\n                    _l.nodes[prev].next = _id;\n                    _l.nodes[_id].prev = prev;\n                    _l.nodes[current].prev = _id;\n                    _l.nodes[_id].next = current;\n                    break;\n                }\n                if (_id == current) {\n                    revert SortedLinked_ListIDAlreadyInList();\n                }\n                current = _l.nodes[current].next;\n            }\n        }\n        ++_l.size;\n    }\n\n    /**\n     * @notice Remove a node from the list.\n     * @param _l The sorted linked list to remove a node from\n     * @param _id The ID to remove.\n     */\n    function erase(List storage _l, uint256 _id) public {\n        uint256 begin = _l.begin;\n        uint256 end = _l.end;\n        uint256 size = _l.size;\n        if (_id < begin || _id > end || size == 0 || ((size == 1) && (_id != begin))) {\n            revert SortedLinked_ListIDNotInList();\n        }\n        if (size == 1) {\n            delete _l.begin;\n            delete _l.end;\n        } else if (_id == begin) {\n            uint256 next = _l.nodes[_id].next;\n            _l.begin = next;\n            delete _l.nodes[next].prev;\n        } else if (_id == end) {\n            uint256 prev = _l.nodes[_id].prev;\n            _l.end = prev;\n            delete _l.nodes[prev].next;\n        } else {\n            uint256 next = _l.nodes[_id].next;\n            if (next == 0) {\n                // no way 0 is next if node is on the list\n                // and it is not the end one\n                revert SortedLinked_ListIDNotInList();\n            }\n\n            uint256 prev = _l.nodes[_id].prev;\n            _l.nodes[prev].next = next;\n            _l.nodes[next].prev = prev;\n        }\n        delete _l.nodes[_id];\n        _l.size--;\n    }\n\n    /**\n     * @return An array of all ids of the nodes in the sorted list.\n     * @param _l The sorted linked list to get the ids from\n     */\n    function getNodesId(List storage _l) public view returns (uint256[] memory) {\n        uint256 size = _l.size;\n        if (size == 0) return new uint256[](0);\n        uint256[] memory result = new uint256[](size);\n        uint256 current = _l.begin;\n        uint256 i;\n        while (i < size) {\n            result[i] = current;\n            current = _l.nodes[current].next;\n            ++i;\n        }\n        return result;\n    }\n\n    /**\n     * @notice An array of all ids of the nodes in the sorted list in range [_from, _to]\n     * @param _l The sorted linked list to get the ids from\n     * @param _from The ID to begin from.\n     * @param _to The ID to end.\n     */\n    function getNodesIdInRange(List storage _l, uint256 _from, uint256 _to)\n        public\n        view\n        returns (uint256[] memory allOrderIds)\n    {\n        if (_to != 0) {\n            if (\n                (_from > _to) || (_from != _l.begin && _l.nodes[_from].prev == 0)\n                    || (_to != _l.end && _l.nodes[_to].next == 0)\n            ) {\n                revert SortedLinked_ListInvalidRange();\n            }\n\n            allOrderIds = new uint256[](_l.size);\n            uint256 i;\n\n            while (_from != 0 && _from <= _to) {\n                allOrderIds[i] = _from;\n                _from = _l.nodes[_from].next;\n                ++i;\n            }\n\n            // resize the array dynamically using Yul\n            assembly {\n                mstore(allOrderIds, i)\n            }\n        }\n    }\n\n    /**\n     * @notice Return the next of a node\n     * @param _l The sorted linked list where the node belongs to\n     * @param _id The ID of the node to get the next of\n     * @dev Next is returned for any node existent or not. If the node\n     * requested is the end of the list 0 is returned\n     */\n    function getNext(List storage _l, uint256 _id) internal view returns (uint256) {\n        return _l.nodes[_id].next;\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "BokkyPooBahsDateTimeLibrary/=lib/BokkyPooBahsDateTimeLibrary/",
+      "ds-test/=lib/forge-std/lib/ds-test/src/",
+      "forge-std/=lib/forge-std/src/",
+      "openzeppelin-contracts/=lib/openzeppelin-contracts/",
+      "openzeppelin/=lib/openzeppelin-contracts/",
+      "@openzeppelin/=lib/openzeppelin-contracts/",
+      "openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/",
+      "risc0/=lib/risc0-ethereum/contracts/src/",
+      "eas-contracts/=lib/eas-contracts/contracts/",
+      "safe-contracts/=lib/safe-contracts/contracts/",
+      "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+      "risc0-ethereum/=lib/risc0-ethereum/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {
+      "src/lib/SortedLinkedList.sol": {
+        "SortedLinkedList": "0x07B879C1bAaeeDe4dbC7383f6342556Ef144b27F"
+      },
+      "src/lib/TimeOperations.sol": {
+        "TimeOperations": "0x852BE1E091189E68cD8721163286172d1e162a5a"
+      },
+      "src/utils/GatewayUtils.sol": {
+        "GatewayUtils": "0xaB8b3a4CDdcf7B83C57880926Ba940F388897D11"
+      }
+    }
+  }
+}}

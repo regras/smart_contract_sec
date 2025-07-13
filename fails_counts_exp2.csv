@@ -1,0 +1,34 @@
+fails,count
+DOCKER_KILL_OOM,139
+DOCKER_TIMEOUT,111
+exception (Killed),83
+exception (manticore.core.state.Concretize),46
+exception (manticore.exceptions.ManticoreError: Forking on unfeasible constraint set),46
+DOCKER_SEGV,4
+" check output.json""",4
+"""error parsing results: file could not be opened successfully:
+- method gz: ReadError('empty file')
+- method bz2: ReadError('not a bzip2 file')
+- method xz: ReadError('not an lzma file')
+- method tar: ReadError('empty file')""",4
+"""analysis unsuccessful",4
+exception (manticore.exceptions.SolverError: Solver could not find a value for expression under current constraint set),2
+exception (AssertionError),2
+exception (Segmentation fault),2
+exception (slither.visitors.expression.constants_folding.NotConstant),1
+exception (ValueError: non-hexadecimal number found in fromhex() arg at position 8616),1
+exception (manticore.core.smtlib.expression.ExpressionEvalError: __bool__ for Bool),1
+exception (json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)),1
+exception (java.io.IOException),1
+exception (binascii.Error: Non-hexadecimal digit found),1
+exception (IndexError: list index out of range),1
+exception (UnicodeDecodeError: 'ascii' codec can't decode byte 0xd0 in position 1547: ordinal not in range(128)),1
+exception (IndexError: pop from empty list),1
+" unknown name(SHR) or instr_name(INVALID))""",1
+exception (AttributeError: 'NoneType' object has no attribute 'result'),1
+exception (AttributeError: 'NoneType' object has no attribute 'as_long'),1
+exception (ANTLR runtime and generated code versions disagree: 4.9.2!=4.7.2),1
+DOCKER_RECEIVED_SIGNAL_6,1
+"""exception (crytic_compile.platform.exceptions.InvalidCompilation: Invalid solc compilation /sb/parity_wallet_bug_1.sol:78:37: Error: The state mutability modifier \""constant\"" was removed in version 0.5.0. Use \""view\"" or \""pure\"" instead.)""",1
+"""exception (RuntimeError: Source map error",1
+exception (solcx.exceptions.SolcError: An error occurred during execution),1

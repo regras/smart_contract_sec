@@ -1,0 +1,23 @@
+{{
+  "language": "Vyper",
+  "sources": {
+    "src/sanity.vy": {
+      "content": "# @version 0.4.1\n# WHAT VERIFYING A VYPER CONTRACT DOES\n\n# from .interfaces import AggregatorV3Interface\n\n# implements: AggregatorV3Interface\n\n\nCL_DECIMALS_DIFF: constant(uint256) = 10**8\n\n# @deploy\n# def __init__():\n#     assert (\n#         staticcall ETH_USD_CL_PRICE_FEED.decimals() == 8\n#     )  # assuming this will always be true\n\n\n@external\n@pure\ndef decimals() -> uint8:\n    \"\"\"\n    @notice Returns the number of decimals used by the price feed\n    \"\"\"\n    return 18",
+      "sha256sum": "a91cb1c4aff19a78bd9a202fab8e00506ddc8537d0a91f2d156ee13b037aedf4"
+    }
+  },
+  "settings": {
+    "outputSelection": {
+      "src/sanity.vy": [
+        "evm.bytecode",
+        "evm.deployedBytecode",
+        "abi"
+      ]
+    },
+    "search_paths": [
+      "."
+    ]
+  },
+  "compiler_version": "v0.4.1+commit.8a93dd27",
+  "integrity": "bc582b28256b4e4c63fcfb8c132376dbbcf5bd5cf11961fda86a8793d98740e2"
+}}

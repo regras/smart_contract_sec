@@ -1,0 +1,43 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "contracts/helpers/HolderHelper.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.25;\n\nimport \"contracts/helpers/ERC20Helper.sol\";\n\ncontract HolderHelper is ERC20Helper {\n    struct Holder {\n        address token;\n        address holder;\n        uint256 balance;\n        bool isContract;\n    }\n\n    function isContract(address _addr) internal view returns (bool result) {\n        uint256 size;\n        assembly {\n            size := extcodesize(_addr)\n        }\n        result = size > 0;\n    }\n\n    function getSingleTokenHoldersInfo(address _token, address[] calldata _holders)\n        public\n        view\n        returns (uint256, Holder[] memory)\n    {\n        Holder[] memory holders = new Holder[](_holders.length);\n        for (uint256 i = 0; i < _holders.length; i++) {\n            bool _isContract = isContract(_holders[i]);\n            uint256 _balance = getBalance(_token, _holders[i]);\n            holders[i] = Holder(_token, _holders[i], _balance, _isContract);\n        }\n        return (block.number, holders);\n    }\n\n    function pickHolder(address _token, uint256 _sellAmount, address[] calldata _holders)\n        public\n        view\n        returns (address holder)\n    {\n        for (uint256 i = 0; i < _holders.length; i++) {\n            holder = _holders[i];\n            uint256 _balance = getBalance(_token, holder);\n            if (_balance >= _sellAmount) {\n                return holder;\n            }\n        }\n        return address(0);\n    }\n\n    function pickHolders(address _token, uint256 _sellAmount, address[] calldata _holders)\n        public\n        view\n        returns (bool[] memory picked)\n    {\n        picked = new bool[](_holders.length);\n        for (uint256 i = 0; i < _holders.length; i++) {\n            address _holder = _holders[i];\n            uint256 _balance = getBalance(_token, _holder);\n            if (_balance >= _sellAmount) {\n                picked[i] = true;\n            }\n        }\n    }\n\n    function getMultipleTokenHoldersInfo(address[] calldata _tokens, address[][] calldata _holders)\n        public\n        view\n        returns (uint256, Holder[] memory)\n    {\n        require(_tokens.length == _holders.length, \"!length\");\n        uint256 outLen;\n        for (uint256 i = 0; i < _tokens.length; i++) {\n            outLen += _holders[i].length;\n        }\n\n        Holder[] memory holders = new Holder[](outLen);\n        uint256 counter;\n        for (uint256 j = 0; j < _tokens.length; j++) {\n            for (uint256 i = 0; i < _holders[j].length; i++) {\n                bool _isContract = isContract(_holders[j][i]);\n                uint256 _balance = getBalance(_tokens[j], _holders[j][i]);\n                holders[counter] = Holder(_tokens[j], _holders[j][i], _balance, _isContract);\n                counter += 1;\n            }\n        }\n        return (block.number, holders);\n    }\n}\n"
+    },
+    "contracts/helpers/ERC20Helper.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.25;\n\nimport \"contracts/helpers/Constants.sol\";\n\ninterface IERC20 {\n    function balanceOf(address) external view returns (uint256);\n    function approve(address spender, uint256 amount) external returns (bool);\n    function transfer(address recipient, uint256 amount) external returns (bool);\n    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);\n    function allowance(address owner, address spender) external view returns (uint256);\n}\n\ncontract ERC20Helper is Constants {\n    function getBalance(address buyToken, address recipient) internal view returns (uint256 buyAmount) {\n        if (buyToken == NATIVE) {\n            buyAmount = recipient.balance;\n        } else {\n            buyAmount = IERC20(buyToken).balanceOf(recipient);\n        }\n        return buyAmount;\n    }\n\n    function safeTransfer(address token, address to, uint256 value) public {\n        _callOptionalReturn(token, abi.encodeCall(IERC20.transfer, (to, value)));\n    }\n\n    function safeTransferFrom(address token, address from, address to, uint256 value) public {\n        _callOptionalReturn(token, abi.encodeCall(IERC20.transferFrom, (from, to, value)));\n    }\n\n    function safeApprove(address token, address spender, uint256 amount) public {\n        _callOptionalReturn(token, abi.encodeCall(IERC20.approve, (spender, amount)));\n    }\n\n    /**\n     * @dev Set the calling contract's allowance toward `spender` to `value`. If `token` returns no value,\n     * non-reverting calls are assumed to be successful. Meant to be used with tokens that require the approval\n     * to be set to zero before setting it to a non-zero value, such as USDT.\n     */\n    function forceApprove(address token, address spender, uint256 value) internal {\n        bytes memory approvalCall = abi.encodeCall(IERC20.approve, (spender, value));\n\n        if (!_callOptionalReturnBool(token, approvalCall)) {\n            _callOptionalReturn(token, abi.encodeCall(IERC20.approve, (spender, 0)));\n            _callOptionalReturn(token, approvalCall);\n        }\n    }\n\n    /**\n     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement\n     * on the return value: the return value is optional (but if data is returned, it must not be false).\n     * @param token The token targeted by the call.\n     * @param data The call data (encoded using abi.encode or one of its variants).\n     *\n     * This is a variant of {_callOptionalReturn} that silently catches all reverts and returns a bool instead.\n     */\n    function _callOptionalReturnBool(address token, bytes memory data) private returns (bool) {\n        bool success;\n        uint256 returnSize;\n        uint256 returnValue;\n        assembly (\"memory-safe\") {\n            success := call(gas(), token, 0, add(data, 0x20), mload(data), 0, 0x20)\n            returnSize := returndatasize()\n            returnValue := mload(0)\n        }\n        return success && (returnSize == 0 ? token.code.length > 0 : returnValue == 1);\n    }\n\n    function _callOptionalReturn(address token, bytes memory data) private {\n        uint256 returnSize;\n        uint256 returnValue;\n        assembly (\"memory-safe\") {\n            let success := call(gas(), token, 0, add(data, 0x20), mload(data), 0, 0x20)\n            // bubble errors\n            if iszero(success) {\n                let ptr := mload(0x40)\n                returndatacopy(ptr, 0, returndatasize())\n                revert(ptr, returndatasize())\n            }\n            returnSize := returndatasize()\n            returnValue := mload(0)\n        }\n\n        if (returnSize == 0 ? token.code.length == 0 : returnValue != 1) {\n            revert(\"!erc20\");\n        }\n    }\n}\n"
+    },
+    "contracts/helpers/Constants.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.25;\n\ncontract Constants {\n    uint256 constant ONE = 1e18;\n    address constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": true,
+    "libraries": {}
+  }
+}}

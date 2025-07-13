@@ -1,0 +1,47 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/SXTChainMessaging.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.28;\n\nimport {ISXTChainMessaging} from \"./interfaces/ISXTChainMessaging.sol\";\n\n/// @title SXTChainMessaging\n/// @notice Implementation for sending messages to the SXT Chain\ncontract SXTChainMessaging is ISXTChainMessaging {\n    /// @notice Mapping of sender address to their message nonce\n    mapping(address => uint248) private _nonces;\n\n    /// @inheritdoc ISXTChainMessaging\n    function message(bytes calldata body) external {\n        ++_nonces[msg.sender];\n        emit Message(msg.sender, body, _nonces[msg.sender]);\n    }\n\n    /// @inheritdoc ISXTChainMessaging\n    function getNonce(address sender) external view returns (uint248 nonce) {\n        nonce = _nonces[sender];\n    }\n}\n"
+    },
+    "src/interfaces/ISXTChainMessaging.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.28;\n\n/// @title ISXTChainMessaging\n/// @notice Interface for sending messages to the SXT Chain\ninterface ISXTChainMessaging {\n    /// @notice Emitted when a message is sent to the SXT Chain\n    /// @param sender The address of the sender\n    /// @param body The message being sent\n    /// @param nonce The nonce of the message\n    event Message(address sender, bytes body, uint248 nonce);\n\n    /// @notice Send a message to the SXT Chain\n    /// @param body The message to send\n    function message(bytes calldata body) external;\n\n    /// @notice Get the current nonce for a sender\n    /// @param sender The address to get the nonce for\n    /// @return nonce The current nonce for the sender\n    function getNonce(address sender) external view returns (uint248 nonce);\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.2.0/",
+      "forge-std/=dependencies/forge-std-1.9.6/src/",
+      "@chainlink-contracts-0.8.0/=dependencies/@chainlink-contracts-0.8.0/src/v0.6/vendor/@arbitrum/nitro-contracts/src/",
+      "@openzeppelin-contracts-5.2.0/=dependencies/@openzeppelin-contracts-5.2.0/",
+      "@openzeppelin-contracts-upgradeable-5.2.0/=dependencies/@openzeppelin-contracts-upgradeable-5.2.0/",
+      "forge-std-1.9.6/=dependencies/forge-std-1.9.6/src/",
+      "openzeppelin-foundry-upgrades-0.4.0/=dependencies/openzeppelin-foundry-upgrades-0.4.0/src/",
+      "openzeppelin-foundry-upgrades/=dependencies/openzeppelin-foundry-upgrades-0.4.0/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 2000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}

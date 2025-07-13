@@ -1,0 +1,38 @@
+{{
+  "language": "Solidity",
+  "sources": {
+    "src/MaseerValve.sol": {
+      "content": "// SPDX-License-Identifier: BUSL-1.1\npragma solidity ^0.8.28;\n\ninterface IPip {\n    function poke(uint256 _next) external;\n}\n\ncontract MaseerValve {\n\n    // wards\n    mapping (address => uint256) public wards;\n    function rely(address _usr) external auth { wards[_usr] = 1; }\n    function deny(address _usr) external auth { wards[_usr] = 0; }\n    modifier auth { if (wards[msg.sender] != 1) { revert NotAuthorized(msg.sender); } _; }\n    // buds\n    mapping (address => uint256) public buds;\n    function kiss(address _usr) external auth { buds[_usr] = 1; }\n    function diss(address _usr) external auth { buds[_usr] = 0; }\n    modifier bud { if (buds[msg.sender] != 1) { revert NotAuthorized(msg.sender); } _; }\n\n    error NotAuthorized(address usr);\n    error NotEta(uint256 eta);\n\n    uint256 public constant  zzz = 10 hours;\n\n    address public immutable pip;\n\n    uint256 public nxt;\n    uint256 public eta;\n\n    constructor(address _pip) {\n        pip = _pip;\n        eta = type(uint256).max;  // Deactivate until next poke\n        wards[msg.sender] = 1;\n    }\n\n    function poke(uint256 _nxt) external bud {\n        eta = block.timestamp + zzz;\n        nxt = _nxt;\n    }\n\n    function flow() external {\n        if (block.timestamp < eta) revert NotEta(eta);\n        IPip(pip).poke(nxt);\n        eta = type(uint256).max;  // Deactivate until next poke\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/",
+      "maseer-one/=lib/maseer-one/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 21000
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "devdoc",
+          "userdoc",
+          "metadata",
+          "abi"
+        ]
+      }
+    },
+    "evmVersion": "cancun",
+    "viaIR": false,
+    "libraries": {}
+  }
+}}
