@@ -1,5 +1,41 @@
 # Ferramentas de segurança podem estar detectando menos vulnerabilidades em contratos inteligentes de blockchains
 
+## 📂 Estrutura do `README.md`
+
+Esta seção descreve como o `README.md` está organizado, facilitando a navegação e compreensão do conteúdo.
+
+1. **[📌 Resumo do Projeto](#-resumo-do-projeto)**  
+   Apresenta o contexto, objetivo e escopo do trabalho, incluindo uma visão geral dos experimentos conduzidos e um resumo do artigo submetido ao SBSEG 2025.
+
+2. **[📁 Estrutura do Repositório](#-estrutura-do-repositório)**  
+   Lista a organização de pastas e arquivos do projeto, explicando a função de cada item, como scripts, datasets e resultados de análise.
+
+3. **[🌟 Selos Considerados](#-selos-considerados)**  
+   Indica os selos de avaliação do SBSEG visados pelo artefato, com explicações sobre os critérios atendidos.
+
+4. **[ℹ️ Informações Básicas](#ℹ️-informações-básicas)**  
+   Especifica os requisitos de hardware, software e ambiente para execução e reprodução dos experimentos.
+
+5. **[📦 Dependências](#-dependências)**  
+   Lista as bibliotecas Python e ferramentas necessárias, com instruções de instalação.
+
+6. **[⚠️ Preocupações com Segurança](#️-preocupações-com-segurança)**  
+   Informa sobre potenciais riscos, medidas de segurança adotadas e boas práticas para execução segura.
+
+7. **[🛠️ Instalação](#️-instalação)**  
+   Passo a passo para configurar o ambiente, incluindo criação de ambiente virtual e instalação de dependências.
+
+8. **[✅ Teste Mínimo](#-teste-mínimo)**  
+   Procedimento rápido para verificar se o ambiente está configurado corretamente e se o script principal funciona como esperado.
+
+9. **[🔬 Experimentos](#-experimentos)**  
+   Explica detalhadamente como reproduzir cada experimento, com arquivos de entrada/saída esperados e descrição das principais reivindicações do artigo.
+
+10. **[📄 LICENSE](#-license)**  
+    Informa a licença do projeto, neste caso **Creative Commons CC0 1.0 Universal**, com o texto legal completo.
+
+
+
 ## 📌 Resumo do Projeto
 
 Este repositório contém o dataset, scripts e resultados utilizados no estudo submetido ao SBSEG 2025, intitulado "**Ferramentas de segurança podem estar detectando menos vulnerabilidades em contratos inteligentes de blockchains**". O objetivo principal do artigo e deste artefato é avaliar a evolução e a eficácia de ferramentas automatizadas de análise de vulnerabilidades para contratos inteligentes Ethereum, utilizando a estrutura SmartBugs.
