@@ -218,6 +218,30 @@ pip install pandas matplotlib seaborn
 
 ```
 
+4. **Configure os Parâmetros no `config.json`:**
+
+O arquivo `config.json` contém os caminhos de entrada (resultados brutos e tabelas de mapeamento).
+Por padrão, o repositório já vem configurado para rodar diretamente, mas você pode ajustar os caminhos no `config.json` caso queira alterar diretórios ou nomes de arquivos.
+
+```json
+{
+  "experiments": {
+      "exp1": "experiment1_recent_contracts/results_exp1.csv",
+      "exp2": "experiment2_curated_contracts/results_exp2.csv"
+  },
+  "vulnerabilities_mapping": {
+      "access_control": 19,
+      "arithmetic": 22,
+      "denial_service": 7,
+      "reentrancy": 8,
+      "unchecked_low_calls": 12,
+      "front_running": 7,
+      "time_manipulation": 5,
+      "Other": 3
+   }
+}
+```
+
 Ao final desses passos, o ambiente estará configurado para rodar o script de análise. Os arquivos de resultados do SmartBugs já estão incluídos no repositório, então você não precisa rodar o SmartBugs para os testes mínimos e reprodução dos experimentos, a menos que queira gerar os dados brutos novamente.
 
 ## ✅ Teste Mínimo
@@ -274,7 +298,7 @@ A presença desses arquivos e imagens confirma que o script `analysis.py` está 
 
 Esta seção descreve os passos para a execução completa dos experimentos e a obtenção dos resultados apresentados no artigo.
 
-O artefato foi projetado para reproduzir as principais reivindicações do artigo através da execução do script `analysis.py`, que processa os resultados pré-gerados do SmartBugs.
+O artefato foi projetado para reproduzir as principais reivindicações do artigo através da execução do script `analysis.py`, que lê os caminhos configurados em `config.json` e processa os resultados pré-gerados do SmartBugs (já incluídos no repositório). As principais reivindicações do artigo podem ser reproduzidas sem necessidade de executar o SmartBugs, pois os resultados brutos já estão incluídos no repositório.
 
 **Tempo Esperado de Execução:** A execução do script `analysis.py` é **rápida**, levando aproximadamente **2 segundos** para ser concluída em um ambiente com os requisitos de hardware recomendados. O tempo é dominado pela leitura dos arquivos CSV e operações de DataFrame do pandas.
 
