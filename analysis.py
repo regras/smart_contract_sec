@@ -13,6 +13,18 @@ processando configurações de experimento predefinidas.
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import json
+import sys
+
+
+def load_config(config_path="config.json"):
+    """Carrega configurações do arquivo config.json."""
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"❌ Arquivo de configuração {config_path} não encontrado.")
+        sys.exit(1)
 
 
 def plot_sorted_bar_chart(
@@ -162,7 +174,7 @@ def count_items(df, column, exp_num):
     counts.to_csv(f"{column}_counts_exp{exp_num}.csv", index=False)
 
 
-def analyze_categories(df, exp_num):
+def analyze_categories(df, exp_num, mapping_file, exp2_reference_counts):
     """
     Analisa e categoriza as descobertas de segurança dos resultados do SmartBugs,
     calculando porcentagens com base no tipo de experimento.
@@ -175,19 +187,6 @@ def analyze_categories(df, exp_num):
         df (pd.DataFrame): O DataFrame de entrada contendo os resultados do SmartBugs.
         exp_num (int): O número do experimento (1 para contratos recentes, 2 para contratos curados).
     """
-
-    # Contagens de referência para vulnerabilidades conhecidas no Experimento 2 (contratos curados).
-    # Esses valores representam o número esperado de cada vulnerabilidade no conjunto de dados curado, usado para calcular as porcentagens de detecção.
-    exp2_reference_counts = {
-        "access_control": 19,
-        "arithmetic": 22,
-        "denial_service": 7,
-        "reentrancy": 8,
-        "unchecked_low_calls": 12,
-        "front_running": 7,
-        "time_manipulation": 5,
-        "Other": 3,
-    }
 
     # Limpa a coluna 'findings': remove chaves e divide em uma lista de strings
     df["findings"] = (
@@ -206,9 +205,7 @@ def analyze_categories(df, exp_num):
     # Filtra strings vazias da coluna 'findings'
     exploded_df = exploded_df[exploded_df["findings"] != ""]
     # Categoriza as descobertas usando a função auxiliar
-    categorized_df = categorize_findings(
-        exploded_df, "vulnerabilities_mapping.csv", exp_num
-    )
+    categorized_df = categorize_findings(exploded_df, mapping_file, exp_num)
     # Seleciona as colunas relevantes para agregação
     categorized_df = categorized_df[["basename", "category", "findings"]]
     # Agrupa por categoria e conta basenames (contratos) e descobertas únicas
@@ -240,14 +237,16 @@ def analyze_categories(df, exp_num):
 
 
 if __name__ == "__main__":
-    # Configuração para os dois experimentos
-    experiments_config = [
-        {"filename": "experiment1_recent_contracts/results_exp1.csv", "exp_num": 1},
-        {"filename": "experiment2_curated_contracts/results_exp2.csv", "exp_num": 2},
-    ]
+    # Configuração para os experimentos
+    config = load_config("config.json")
+    mapping_file = config["mapping_file"]
+
+    # Contagens de referência para vulnerabilidades conhecidas no Experimento 2 (contratos curados).
+    # Esses valores representam o número esperado de cada vulnerabilidade no conjunto de dados curado, usado para calcular as porcentagens de detecção.
+    exp2_reference_counts = config["exp2_reference_counts"]
 
     # Itera sobre cada configuração de experimento
-    for exp_data in experiments_config:
+    for exp_data in config["experiments"]:
         file_path = exp_data["filename"]
         experiment_number = exp_data["exp_num"]
 
@@ -268,5 +267,7 @@ if __name__ == "__main__":
         # Chama as funções de análise para o experimento atual
         count_items(df_main.copy(), "findings", experiment_number)
         count_items(df_main.copy(), "fails", experiment_number)
-        analyze_categories(df_main.copy(), experiment_number)
+        analyze_categories(
+            df_main.copy(), experiment_number, mapping_file, exp2_reference_counts
+        )
         print("-" * 50)
