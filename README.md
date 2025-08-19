@@ -62,6 +62,8 @@ Este repositório está organizado da seguinte forma para facilitar a navegaçã
 .
 ├── analysis.py                       # Script principal para análise e agregação de dados de vulnerabilidades.
 │
+├── config.json                       # Arquivo de configuração que centraliza parâmetros utilizados pelo script analysis.py.
+│
 ├── vulnerabilities_mapping.csv       # Arquivo CSV que mapeia as descobertas (findings) das ferramentas.
 │
 ├── experiment1_recent_contracts/     # Diretório dedicado ao Experimento 1 (Contratos Recentes)
