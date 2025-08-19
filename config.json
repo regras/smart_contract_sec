@@ -1,0 +1,23 @@
+{
+    "mapping_file": "vulnerabilities_mapping.csv",
+    "experiments": [
+        {
+            "filename": "experiment1_recent_contracts/results_exp1.csv",
+            "exp_num": 1
+        },
+        {
+            "filename": "experiment2_curated_contracts/results_exp2.csv",
+            "exp_num": 2
+        }
+    ],
+    "exp2_reference_counts": {
+        "access_control": 19,
+        "arithmetic": 22,
+        "denial_service": 7,
+        "reentrancy": 8,
+        "unchecked_low_calls": 12,
+        "front_running": 7,
+        "time_manipulation": 5,
+        "Other": 3
+    }
+}
